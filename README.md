@@ -1,19 +1,48 @@
-IMPORTANT:
+# Important Deployment Information
 
-1. Please, do not deploy stack twice on the same account under the same region (as it will be naming collesion)
-2. Please do not change the name of the resources when it is alredy deployed (it will delete the old one and create a new one with the new name)
-3. If you delete the stack, the DB and S3 bucket will not be deleted, cause I defined the policy to RETAIN (to prevent data loss).
+## Deployment Guidelines
 
-4. To deploy the stack you need to go to jet-trails folder
+1. **Do not deploy the stack twice on the same account under the same region**
+
+   - This will result in a naming collision.
+
+2. **Do not change resource names after deployment**
+
+   - Changing names will delete the old resources and create new ones with the new names.
+
+3. **Stack deletion behavior**
+   - If you delete the stack, the DB and S3 bucket will not be deleted.
+   - A RETAIN policy is defined to prevent data loss.
+
+## Deployment Process
+
+To deploy the stack:
+
+1. Navigate to the jet-trails folder
+2. Run the deployment script:
    ./deploy.sh
-   This command install python libr, and deploy everything from scratch. At the end there will be an output - instance id (id of an ec2 bastion host) - db host
 
-Please use this value to do a port forwarding to connect to DB.
+This command will:
 
+- Install Python libraries
+- Deploy everything from scratch
+
+3. Note the output values:
+
+- EC2 bastion host instance ID
+- DB host
+
+## Connecting to the Database
+
+Use port forwarding to connect to the DB:
+
+```
 aws ssm start-session \
  --target <ec2_id> \
  --document-name AWS-StartPortForwardingSessionToRemoteHost \
  --parameters '{"portNumber":["5432"],"localPortNumber":["7000"],"host":["<dbhost>"]}'
+
+```
 
 After this you will have the result like
 Port 7000 opened for sessionId ...
@@ -24,13 +53,24 @@ host: 127.0.0.1
 pass, username, dbidentificator you should get from the aws secrets manager
 
 To check all available users:
+
+```sql
 SELECT usename FROM pg_catalog.pg_user;
 
-Result Should be like this : - "postgresadmin" - "maintenance" - "analytics_user1" - "analytics_user2"
+Expected result:
+
+"postgresadmin"
+"maintenance"
+"analytics_user1"
+"analytics_user2"
+```
 
 The password for the current users you can get in aws console under the aws ssm params.
 
-TIPS:
+## Tips
 
-1. You can stop EC2 bastion maching when you are not connecting to DB to safe money. Please use only STOP, not TERMINATE.
-2. Do not change any name on the stack if the stack already deployed, since it will delete the old one and recreate the same with the new name.
+1. To save costs, you can stop the EC2 bastion machine when not in use.
+   Use STOP, not TERMINATE.
+
+2. Do not change any resource names if the stack is already deployed.
+   Changing names will delete old resources and recreate them with new names.
